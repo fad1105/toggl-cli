@@ -1,0 +1,15 @@
+[version]
+version = 2.0.0.0b1
+
+[auth]
+api_token = your_api_token
+
+[logging]
+file_logging = True
+file_logging_path = /Users/lokal/.toggl_log
+
+[options]
+tz = local
+timezone = UTC
+time_format = LTS
+datetime_format = L

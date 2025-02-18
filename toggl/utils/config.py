@@ -63,7 +63,7 @@ class IniConfigMixin:
         'version': IniEntry('version', str),
     }
 
-    _old_file_path = Path.expanduser(Path('~/.togglrc'))
+    _old_file_path = str(Path.expanduser(Path('~/.togglrc')))
 
     if "XDG_CONFIG_HOME" in os.environ:
         _new_file_path = Path(os.environ["XDG_CONFIG_HOME"]).joinpath(".togglrc")

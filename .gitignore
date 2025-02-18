@@ -23,3 +23,5 @@ ChangeLog
 
 # Docs
 site/
+
+*venv/*
