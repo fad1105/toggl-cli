@@ -198,7 +198,6 @@ def get_entries(ctx, use_reports, **conditions):
     entities = sorted(entities, key=lambda x: x.start, reverse=True)
     return entities
 
-
 # TODO: [Feature/Low] Implement other filtrations for the Report's call
 @cli.command('ls', short_help='list a time entries')
 @click.option('--use-reports', is_flag=True, help='Will use different API call that will fetch all time entries.')
@@ -213,9 +212,10 @@ def get_entries(ctx, use_reports, **conditions):
               help='Defines a set of fields of time entries, which will be displayed. It is also possible to modify '
                    'default set of fields using \'+\' and/or \'-\' characters. Supported values: '
                    + types.FieldsType.format_fields_for_help(api.TimeEntry))
+@click.option('--markdown','-m', is_flag=True, help='Outputs the table in markdown format instead of a pretty table.')
 @click.option('--limit', '-n', type=int, help='The number of entries to display')
 @click.pass_context
-def entry_ls(ctx, fields, today, use_reports, limit, **conditions):
+def entry_ls(ctx, fields, today, use_reports, limit, markdown, **conditions):
     """
     Lists time entries the user has access to.
 
@@ -246,6 +246,7 @@ def entry_ls(ctx, fields, today, use_reports, limit, **conditions):
         conditions['stop'] = pendulum.now()
 
     entities = get_entries(ctx, use_reports, **conditions)
+    entities = list(reversed(entities))
 
     if limit:
         entities = entities[:limit]
@@ -259,6 +260,34 @@ def entry_ls(ctx, fields, today, use_reports, limit, **conditions):
                 [str(entity.__fields__[field].format(getattr(entity, field, ''))) for field in fields]
             ))
         return
+    
+    if markdown:
+        click.echo("printing in markdown")
+        header_row = "| " + " | ".join(fields) + " |"
+        separator_row = "| " + " | ".join(["-" * len(field) for field in fields]) + " |"
+        click.echo(header_row)
+        click.echo(separator_row)
+
+        for entity in entities:
+            row = []
+            for field in fields:
+                extra_kwargs = {}
+                if field == 'stop':
+                    extra_kwargs = {
+                        'instance': entity,
+                        'display_running': True
+                    }
+                elif field == 'start':
+                    extra_kwargs = {
+                        'instance': entity,
+                        'only_time_for_same_day': entity.stop
+                    }
+
+                value = str(entity.__fields__[field].format(getattr(entity, field, None), **extra_kwargs))
+                row.append(value)
+            click.echo("| " + " | ".join(row) + " |")
+        return
+
 
     table = PrettyTable()
     table.field_names = [click.style(field.capitalize(), **theme.header) for field in fields]
